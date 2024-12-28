@@ -18,6 +18,7 @@ const JobApplicationForm = () => {
   });
 
   const [statusMessage, setStatusMessage] = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false); // New state to track submission status
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -43,14 +44,11 @@ const JobApplicationForm = () => {
       // Sanitize file name and prepare upload path
       const sanitizedFileName = formData.resume.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
       const resumePath = `job_openings/resumes/${formData.email}_${sanitizedFileName}`;
-      const photoPath = `resumes/${formData.email}_${sanitizedFileName}`;
-
 
       // Upload the resume to Supabase storage
       const { error: uploadError } = await supabase.storage
-      .from('job_openings') // Replace with the exact bucket name
-      .upload(photoPath, formData.resume);
-    
+        .from('job_openings')
+        .upload(resumePath, formData.resume);
 
       if (uploadError) {
         console.error('Resume upload error:', uploadError);
@@ -85,19 +83,24 @@ const JobApplicationForm = () => {
 
       if (dbError) {
         console.error('Error inserting application:', dbError);
-        setStatusMessage(`Error saving application: ${dbError.message}`);
+        setStatusMessage(`Error saving job application: ${dbError.message}`);
         return;
       }
 
-      setStatusMessage('Job application submitted successfully!');
-      alert('Application submitted successfully!');
+      // Show success message and hide the form
+      setIsSubmitted(true); // Mark form as submitted
     } catch (err) {
       console.error('Unexpected error:', err);
       setStatusMessage('Unexpected error occurred while submitting your application.');
     }
   };
 
-  return (
+  return isSubmitted ? (
+    <div className={styles.thankYouMessage}>
+      <h1>Thank you for your interest in Mateng!</h1>
+      <p>We will get in touch with you soon.</p>
+    </div>
+  ) : (
     <form className={styles.formContainer} onSubmit={handleSubmit}>
       <div className={styles.inputGroup}>
         <label className={styles.label}>Name:</label>
@@ -189,15 +192,21 @@ const JobApplicationForm = () => {
           <option value="Customer Service Associate">Customer Service Associate</option>
         </select>
       </div>
-  
-      {/* Conditional Fields Based on Dropdown Selection */}
       {formData.position === 'Video Editor' && (
         <div className={styles.dynamicFields}>
           <p>
-            Create a 30-second video edit featuring motion graphics, sound effects, and interactive elements using the
-            resources at: <a href="https://drive.google.com/drive/folders/1M_gTBJJgzDGHGSaQU6-SItlq2a_-Vgqq" target="_blank" rel="noopener noreferrer">Project Link</a>
+            Please create a 30-second video edit featuring motion graphics, sound effects, and interactive elements. Use the resources provided in the following link: 
+            <a 
+              href="https://drive.google.com/drive/folders/1M_gTBJJgzDGHGSaQU6-SItlq2a_-Vgqq" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className={styles.link}
+            >
+              Project Link
+            </a>
           </p>
-          <label className={styles.label}>Why should we hire you for this role?</label>
+
+          <label className={styles.label}>Paste your project link here?</label>
           <textarea
             name="whyHire"
             onChange={(e) =>
@@ -211,7 +220,6 @@ const JobApplicationForm = () => {
           ></textarea>
         </div>
       )}
-  
       {formData.position === 'Delivery Agent' && (
         <div className={styles.dynamicFields}>
           <label className={styles.label}>Can you drive outskirts from the main city?</label>
@@ -241,7 +249,6 @@ const JobApplicationForm = () => {
           />
         </div>
       )}
-  
       {formData.position === 'Customer Service Associate' && (
         <div className={styles.dynamicFields}>
           <label className={styles.label}>What do you think is the most important aspect of handling a customer problem?</label>
@@ -270,7 +277,6 @@ const JobApplicationForm = () => {
           ></textarea>
         </div>
       )}
-  
       <div className={styles.inputGroup}>
         <label className={styles.label}>Resume:</label>
         <input
@@ -287,7 +293,6 @@ const JobApplicationForm = () => {
       {statusMessage && <p className={styles.statusMessage}>{statusMessage}</p>}
     </form>
   );
-  
 };
 
 export default JobApplicationForm;
