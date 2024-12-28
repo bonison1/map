@@ -50,11 +50,7 @@ const JobApplicationForm = () => {
         .from('job_openings')
         .upload(resumePath, formData.resume);
 
-      if (uploadError) {
-        console.error('Resume upload error:', uploadError);
-        setStatusMessage(`Error uploading resume: ${uploadError.message}`);
-        return;
-      }
+
 
       // Get public URL of the uploaded resume
       const { data: { publicUrl } } = supabase
@@ -81,11 +77,6 @@ const JobApplicationForm = () => {
 
       const { error: dbError } = await supabase.from('job_openings').insert([payload]);
 
-      if (dbError) {
-        console.error('Error inserting application:', dbError);
-        setStatusMessage(`Error saving job application: ${dbError.message}`);
-        return;
-      }
 
       // Show success message and hide the form
       setIsSubmitted(true); // Mark form as submitted
